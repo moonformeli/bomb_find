@@ -1,21 +1,24 @@
-import React from 'react';
+import { observer } from 'mobx-react-lite';
+import React, { useContext } from 'react';
 
+import { BoomStoreContext } from '../../../stores/BoomStore';
 import styles from './BoomPlayBoard.scss';
 
-interface IBoomPlayBoardProps {
-  rows: number;
-  columns: number;
-}
+const BoomPlayBoard: React.FC = () => {
+  const store = useContext(BoomStoreContext);
 
-const BoomPlayBoard: React.FC<IBoomPlayBoardProps> = ({ rows, columns }) => {
-  const onCellClick = () => {};
+  const onCellClick = () => {
+    if (!store.IsStarted) {
+      store.onGameStart();
+    }
+  };
 
-  const cells = new Array(rows).fill(0).map((_, i) => {
+  const cells = new Array(store.Rows).fill(0).map((_, i) => {
     return (
-      <div key={i} className={styles.cellContainer}>
+      <div key={i} className={styles.cellContainer} onClick={onCellClick}>
         <div className={styles.poll} />
         <div className={styles.row}>
-          {new Array(columns).fill(0).map((_, j) => {
+          {new Array(store.Columns).fill(0).map((_, j) => {
             return (
               <div
                 key={j}
@@ -34,4 +37,4 @@ const BoomPlayBoard: React.FC<IBoomPlayBoardProps> = ({ rows, columns }) => {
   return <div className={styles.container}>{cells}</div>;
 };
 
-export default BoomPlayBoard;
+export default observer(BoomPlayBoard);

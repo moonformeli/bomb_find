@@ -1,13 +1,9 @@
-import React from 'react';
+import { observer } from 'mobx-react-lite';
+import React, { useContext } from 'react';
 import { classes } from 'typestyle';
 
+import { BoomStoreContext } from '../../../stores/BoomStore';
 import styles from './BoomScoreBoard.scss';
-
-interface IBoomScoreBoardProps {
-  booms: number;
-  time: number;
-  columns: number;
-}
 
 const getNumSignClass = (sign: number): string => {
   switch (sign) {
@@ -36,11 +32,9 @@ const getNumSignClass = (sign: number): string => {
   }
 };
 
-const BoomScoreBoard: React.FC<IBoomScoreBoardProps> = ({
-  booms,
-  time,
-  columns
-}) => {
+const BoomScoreBoard: React.FC = () => {
+  const store = useContext(BoomStoreContext);
+
   const countBoard = (
     countable: number,
     position: 'left' | 'right'
@@ -63,13 +57,13 @@ const BoomScoreBoard: React.FC<IBoomScoreBoardProps> = ({
 
   return (
     <div className={styles.container}>
-      {countBoard(booms, 'left')}
+      {countBoard(store.Booms, 'left')}
       <div onClick={onGameStart}>
         <i className={styles.gameStart} />
       </div>
-      {countBoard(time, 'right')}
+      {countBoard(store.Time, 'right')}
     </div>
   );
 };
 
-export default BoomScoreBoard;
+export default observer(BoomScoreBoard);

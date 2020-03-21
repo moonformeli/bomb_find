@@ -2,12 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import BoomContainer from '../components/Boom/BoomContainer/BoomContainer';
-import styles from './index.scss';
+import { ELevel } from '../stores/BoomStore';
 
 const App: React.FC = () => {
   return (
     <section>
-      <BoomContainer rows={8} columns={8} />
+      <BoomContainer level={ELevel.EASY} />
     </section>
   );
 };
