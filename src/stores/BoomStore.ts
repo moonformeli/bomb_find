@@ -7,7 +7,7 @@ export enum ELevel {
   HARD = 'hard'
 }
 
-const BOOM = -1;
+export const BOOM = -1;
 const WALL = -Infinity;
 
 export default class BoomStore {
@@ -19,6 +19,9 @@ export default class BoomStore {
   @observable visited: number[][] = []; /* 방문 여부 기록 배열 */
   @observable displayMap: number[][] = []; /* 보여주기 여부 결정 배열 */
   @observable isStarted: boolean = false;
+  @observable isGameOver: boolean = false;
+
+  timer: NodeJS.Timeout | number = 0;
 
   constructor(level: ELevel) {
     if (level === ELevel.EASY) {
@@ -61,7 +64,7 @@ export default class BoomStore {
       }
     }
 
-    /* 지뢰를 랜덤하게 심기 */
+    /* 지뢰를 랜덤하기 심기 */
     let bombs = this.booms;
     while (bombs) {
       const randomRow = Math.floor(Math.random() * this.rows);
@@ -114,25 +117,46 @@ export default class BoomStore {
     return this.isStarted;
   }
 
+  get IsGameOver(): boolean {
+    return this.isGameOver;
+  }
+
   shouldShowCell(row: number, column: number): boolean {
-    return this.displayMap[row][column] > 0;
+    return (
+      this.displayMap[row][column] > 0 || this.displayMap[row][column] === BOOM
+    );
   }
 
   @action.bound
   tick(): void {
-    this.time += 1;
-    setTimeout(this.tick, 1000);
+    if (this.timer) {
+      this.time += 1;
+      this.timer = setTimeout(this.tick, 1000);
+    }
   }
 
   @action.bound
   onGameStart(): void {
     this.isStarted = true;
-    this.tick();
+    this.timer = setTimeout(this.tick);
   }
 
+  /**
+   * 지뢰를 모두 보이기 상태로 전환하고 게임을 종료한다.
+   */
   @action.bound
   onGameOver(): void {
-    alert('game over');
+    this.isGameOver = true;
+    for (let i = 1; i <= this.rows; i += 1) {
+      for (let j = 1; j <= this.columns; j += 1) {
+        if (this.board[i][j] === BOOM) {
+          this.displayMap[i][j] = 1;
+        }
+      }
+    }
+
+    clearTimeout(this.timer as number);
+    this.timer = 0;
   }
 
   /**

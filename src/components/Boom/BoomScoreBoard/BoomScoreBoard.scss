@@ -25,16 +25,25 @@
   }
 }
 
-.gameStart {
+.gameIcon {
   @include boom;
-  background-position: 0 -5.5rem;
   display: inline-block;
   width: 2.6rem;
   height: 2.6rem;
+}
+
+.gameStart {
+  @extend .gameIcon;
+  background-position: 0 -5.5rem;
 
   &:active {
     background-position: -2.6rem -5.5rem;
   }
+}
+
+.gameOver {
+  @extend .gameIcon;
+  background-position: -7.8rem -5.5rem;
 }
 
 .background {

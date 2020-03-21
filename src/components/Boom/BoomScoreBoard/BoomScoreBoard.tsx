@@ -59,7 +59,7 @@ const BoomScoreBoard: React.FC = () => {
     <div className={styles.container}>
       {countBoard(store.Booms, 'left')}
       <div onClick={onGameStart}>
-        <i className={styles.gameStart} />
+        <i className={store.IsGameOver ? styles.gameOver : styles.gameStart} />
       </div>
       {countBoard(store.Time, 'right')}
     </div>

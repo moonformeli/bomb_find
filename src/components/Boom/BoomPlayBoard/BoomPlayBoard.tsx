@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import React, { useContext } from 'react';
-import { classes, style } from 'typestyle';
+import { classes } from 'typestyle';
 
-import { BoomStoreContext } from '../../../stores/BoomStore';
+import { BOOM, BoomStoreContext } from '../../../stores/BoomStore';
 import styles from './BoomPlayBoard.scss';
 
 const showCellClassName = (value: number) => {
@@ -25,6 +25,8 @@ const showCellClassName = (value: number) => {
       return styles.seven;
     case 8:
       return styles.eight;
+    case BOOM:
+      return styles.boom;
     default:
       return '';
   }
@@ -34,6 +36,10 @@ const BoomPlayBoard: React.FC = () => {
   const store = useContext(BoomStoreContext);
 
   const onCellClick = (e: React.MouseEvent) => {
+    if (store.IsGameOver) {
+      return;
+    }
+
     if (!store.IsStarted) {
       store.onGameStart();
     }
