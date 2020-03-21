@@ -1,4 +1,4 @@
-import { action, computed, observable, toJS } from 'mobx';
+import { action, observable, toJS } from 'mobx';
 import { createContext } from 'react';
 
 /**
@@ -15,6 +15,8 @@ export enum EDisplayType {
   UNKNOWN = -2,
   BOOM = -1,
   EMPTY = 0,
+  NOT_BOOM = 10,
+  DEAD_POINT = 20,
   FLAG = Infinity
 }
 
@@ -24,12 +26,15 @@ export default class BoomStore {
   @observable booms: number = 0;
   @observable time: number = 0;
   @observable board: number[][] = []; /* 지뢰 기록 배열 */
-  @observable
-  visited: number[][] = []; /* 방문 여부 기록 배열, 탐색용으로만 사용됨 */
   @observable displayMap: number[][] = []; /* 보여주기 여부 결정 배열 */
   @observable isStarted: boolean = false;
   @observable isGameOver: boolean = false;
+  @observable isMapChanged: boolean = false;
+  @observable fail: boolean = false;
+  @observable deadRow: number = 0;
+  @observable deadColumn: number = 0;
 
+  visited: number[][] = []; /* 방문 여부 기록 배열, 탐색용으로만 사용됨 */
   timer: NodeJS.Timeout | number = 0;
 
   constructor(level: ELevel) {
@@ -40,15 +45,15 @@ export default class BoomStore {
     if (level === ELevel.EASY) {
       this.rows = 8;
       this.columns = 8;
-      this.booms = 10;
+      this.booms = 40;
     } else if (level === ELevel.NORMAL) {
-      this.rows = 12;
-      this.columns = 12;
-      this.booms = 30;
+      this.rows = 16;
+      this.columns = 16;
+      this.booms = 40;
     } else {
-      this.rows = 20;
-      this.columns = 20;
-      this.booms = 60;
+      this.rows = 16;
+      this.columns = 30;
+      this.booms = 99;
     }
 
     this.initBoard();
@@ -153,6 +158,18 @@ export default class BoomStore {
     return this.isGameOver;
   }
 
+  get IsFail(): boolean {
+    return this.fail;
+  }
+
+  set DeadRow(row: number) {
+    this.deadRow = row;
+  }
+
+  set DeadColumn(column: number) {
+    this.deadColumn = column;
+  }
+
   /**
    * 화면에 cell 의 내용을 보여줘도 되는지 판단하는 메소드
    * 1. 지뢰를 눌렀거나
@@ -166,6 +183,44 @@ export default class BoomStore {
       this.displayMap[row][column] >= EDisplayType.EMPTY ||
       this.displayMap[row][column] === EDisplayType.BOOM
     );
+  }
+
+  /**
+   * 1. 지뢰를 모두 찾았거나
+   * 2. 맵을 모두 밝혔다면
+   * 게임을 성공으로 간주하고 종료한다
+   */
+  @action.bound
+  hasFoundAll() {
+    /* 꼽힌 깃발이 모두 정확하게 지뢰를 가리키는지 검사 */
+    for (let i = 1; i <= this.rows; i += 1) {
+      for (let j = 1; j <= this.columns; j += 1) {
+        if (this.displayMap[i][j] === EDisplayType.FLAG) {
+          if (this.board[i][j] !== EDisplayType.BOOM) {
+            return false;
+          }
+        }
+      }
+    }
+
+    /* 모든 지뢰에 꼽힌 깃발을 제외한 나머지 영역이 모두 밝혀졌는지 검사 */
+    for (let i = 1; i <= this.rows; i += 1) {
+      for (let j = 1; j <= this.columns; j += 1) {
+        if (this.displayMap[i][j] !== EDisplayType.FLAG) {
+          if (this.displayMap[i][j] === EDisplayType.UNKNOWN) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+  @action.bound
+  successGame() {
+    this.onGameOver(true);
+    this.fail = false;
   }
 
   @action.bound
@@ -186,12 +241,30 @@ export default class BoomStore {
    * 지뢰를 모두 보이기 상태로 전환하고 게임을 종료한다.
    */
   @action.bound
-  onGameOver(): void {
+  onGameOver(success: boolean): void {
     this.isGameOver = true;
+    this.fail = true;
     for (let i = 1; i <= this.rows; i += 1) {
       for (let j = 1; j <= this.columns; j += 1) {
+        /* 지뢰가 없는 곳에 깃발을 세운 경우 잘못된 지뢰를 선택했다고 상태 변경 */
+        if (
+          this.board[i][j] !== EDisplayType.BOOM &&
+          this.displayMap[i][j] === EDisplayType.FLAG
+        ) {
+          this.displayMap[i][j] = EDisplayType.NOT_BOOM;
+        }
+
+        /* 지뢰인 cell 은 지뢰를 보여줌 */
         if (this.board[i][j] === EDisplayType.BOOM) {
-          this.displayMap[i][j] = EDisplayType.BOOM;
+          if (success) {
+            this.displayMap[i][j] = EDisplayType.FLAG;
+          } else {
+            if (i === this.deadRow && j === this.deadColumn) {
+              this.displayMap[i][j] = EDisplayType.DEAD_POINT;
+            } else {
+              this.displayMap[i][j] = EDisplayType.BOOM;
+            }
+          }
         }
       }
     }
@@ -209,6 +282,8 @@ export default class BoomStore {
     this.timer = 0;
     this.time = 0;
     this.isGameOver = false;
+    this.isMapChanged = false;
+    this.fail = false;
     this.initBoard();
     this.onGameStart();
   }
@@ -234,6 +309,8 @@ export default class BoomStore {
       this.displayMap[row][column] = EDisplayType.FLAG;
       this.booms -= 1;
     }
+
+    this.isMapChanged = true;
   }
 
   /**
@@ -294,6 +371,7 @@ export default class BoomStore {
         continue;
       }
 
+      this.isMapChanged = true;
       this.displayMap[r][c] = this.board[r][c];
       this.visited[r][c] = 1;
 
@@ -308,6 +386,9 @@ export default class BoomStore {
         queue.push([r + 1, c + 1]);
       }
     }
+
+    console.log(toJS(this.displayMap));
+    // console.log(this.shouldShowCell(row, column));
   }
 }
 

@@ -57,11 +57,22 @@ const BoomScoreBoard: React.FC = () => {
     store.onGameRestart();
   };
 
+  const iconClassName = () => {
+    if (store.IsGameOver) {
+      if (store.IsFail) {
+        return styles.gameOver;
+      }
+      return styles.win;
+    }
+
+    return styles.gameStart;
+  };
+
   return (
     <div className={styles.container}>
       {countBoard(store.Booms, 'left')}
       <div onClick={onGameStart}>
-        <i className={store.IsGameOver ? styles.gameOver : styles.gameStart} />
+        <i className={iconClassName()} />
       </div>
       {countBoard(store.Time, 'right')}
     </div>

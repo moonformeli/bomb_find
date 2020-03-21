@@ -80,6 +80,16 @@
   background-position: -6.4rem -3.9rem;
 }
 
+.notBoom {
+  @include cell;
+  background-position: -4.8rem -3.9rem;
+}
+
+.deadPoint {
+  @include cell;
+  background-position: -3.2rem -3.9rem;
+}
+
 .flag {
   @include cell;
   background-position: -1.6rem -3.9rem;

@@ -1,3 +1,4 @@
+import { observer } from 'mobx-react-lite';
 import React, { useRef } from 'react';
 import { style } from 'typestyle';
 
@@ -40,4 +41,4 @@ const BoomContainer: React.FC<IBoomContainerProps> = ({ level }) => {
   );
 };
 
-export default BoomContainer;
+export default observer(BoomContainer);

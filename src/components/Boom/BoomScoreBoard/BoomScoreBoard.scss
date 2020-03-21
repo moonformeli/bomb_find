@@ -46,6 +46,11 @@
   background-position: -7.8rem -5.5rem;
 }
 
+.win {
+  @extend .gameIcon;
+  background-position: -10.4rem -5.5rem;
+}
+
 .background {
   @include boom;
 }

@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
-import React, { useContext } from 'react';
-import { classes } from 'typestyle';
+import React, { useContext, useEffect, useState } from 'react';
+import { classes, style } from 'typestyle';
 
 import { BoomStoreContext, EDisplayType } from '../../../stores/BoomStore';
 import styles from './BoomPlayBoard.scss';
@@ -34,19 +34,80 @@ const showCellClassName = (value: number) => {
       return styles.boom;
     case EDisplayType.FLAG:
       return styles.flag;
+    case EDisplayType.NOT_BOOM:
+      return styles.notBoom;
+    case EDisplayType.DEAD_POINT:
+      return styles.deadPoint;
     default:
       return '';
   }
 };
 
+interface ICellsProps {
+  rows: number;
+  columns: number;
+  onCellClick: (e: React.MouseEvent) => void;
+  shouldShowCell: (rows: number, columns: number) => boolean;
+  displayMap: number[][];
+}
+
+const Cells: React.FC<ICellsProps> = observer(
+  ({ rows, columns, onCellClick, shouldShowCell, displayMap }) => {
+    return (
+      <>
+        {new Array(rows).fill(0).map((_, i) => {
+          return (
+            <div
+              key={i}
+              className={styles.cellContainer}
+              onMouseDown={onCellClick}
+              onContextMenu={e => e.preventDefault()}
+            >
+              <div className={styles.poll} />
+              <div className={styles.row}>
+                {new Array(columns).fill(0).map((_, j) => {
+                  const row = i + 1;
+                  const column = j + 1;
+
+                  return (
+                    <div
+                      key={j}
+                      className={classes(
+                        styles.cell,
+                        shouldShowCell(row, column) &&
+                          showCellClassName(displayMap[row][column])
+                      )}
+                      data-row={row}
+                      data-column={column}
+                    />
+                  );
+                })}
+              </div>
+              <div className={styles.poll} />
+            </div>
+          );
+        })}
+      </>
+    );
+  }
+);
+
 const BoomPlayBoard: React.FC = () => {
   const store = useContext(BoomStoreContext);
+  const [map, setMap] = useState(store.displayMap);
+
+  useEffect(() => {
+    setMap(store.displayMap);
+    store.isMapChanged = false;
+  }, [store.isMapChanged]);
 
   const onLeftClick = (row: number, column: number): void => {
     if (store.isSafe(row, column)) {
       store.findSafeArea(row, column);
     } else {
-      store.onGameOver();
+      store.DeadRow = row;
+      store.DeadColumn = column;
+      store.onGameOver(false);
     }
   };
 
@@ -75,42 +136,22 @@ const BoomPlayBoard: React.FC = () => {
      * 클릭의 종류에 상관없이 클릭이 발생하면
      * 게임 종료의 여부를 판단한다
      */
+    if (store.hasFoundAll()) {
+      store.successGame();
+    }
   };
 
-  const cells = new Array(store.Rows).fill(0).map((_, i) => {
-    return (
-      <div
-        key={i}
-        className={styles.cellContainer}
-        onMouseDown={onCellClick}
-        onContextMenu={e => e.preventDefault()}
-      >
-        <div className={styles.poll} />
-        <div className={styles.row}>
-          {new Array(store.Columns).fill(0).map((_, j) => {
-            const row = i + 1;
-            const column = j + 1;
-
-            return (
-              <div
-                key={j}
-                className={classes(
-                  styles.cell,
-                  store.shouldShowCell(row, column) &&
-                    showCellClassName(store.displayMap[row][column])
-                )}
-                data-row={row}
-                data-column={column}
-              />
-            );
-          })}
-        </div>
-        <div className={styles.poll} />
-      </div>
-    );
-  });
-
-  return <div className={styles.container}>{cells}</div>;
+  return (
+    <div className={styles.container}>
+      <Cells
+        rows={store.Rows}
+        columns={store.Columns}
+        onCellClick={onCellClick}
+        shouldShowCell={store.shouldShowCell}
+        displayMap={map}
+      />
+    </div>
+  );
 };
 
 export default observer(BoomPlayBoard);
