@@ -23,7 +23,7 @@ export enum ELevelColumns {
 }
 
 export enum ELevelBoom {
-  EASY = 35,
+  EASY = 3,
   NORMAL = 40,
   HARD = 99
 }
@@ -200,22 +200,14 @@ export default class BoomStore {
    */
   @action.bound
   hasFoundAll() {
-    /* 꼽힌 깃발이 모두 정확하게 지뢰를 가리키는지 검사 */
+    /* 아직 누르지 않은 cell 들이 모두 지뢰인지 확인. 맞다면 게임 성공으로 간주 */
     for (let i = 1; i <= this.rows; i += 1) {
       for (let j = 1; j <= this.columns; j += 1) {
-        if (this.displayMap[i][j] === EDisplayType.FLAG) {
+        if (
+          this.displayMap[i][j] === EDisplayType.UNKNOWN ||
+          this.displayMap[i][j] === EDisplayType.FLAG
+        ) {
           if (this.board[i][j] !== EDisplayType.BOOM) {
-            return false;
-          }
-        }
-      }
-    }
-
-    /* 모든 지뢰에 꼽힌 깃발을 제외한 나머지 영역이 모두 밝혀졌는지 검사 */
-    for (let i = 1; i <= this.rows; i += 1) {
-      for (let j = 1; j <= this.columns; j += 1) {
-        if (this.displayMap[i][j] !== EDisplayType.FLAG) {
-          if (this.displayMap[i][j] === EDisplayType.UNKNOWN) {
             return false;
           }
         }
@@ -229,6 +221,7 @@ export default class BoomStore {
   successGame() {
     this.onGameOver(true);
     this.fail = false;
+    this.booms = 0;
   }
 
   @action.bound
