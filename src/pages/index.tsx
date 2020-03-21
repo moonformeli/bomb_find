@@ -7,7 +7,7 @@ import { ELevel } from '../stores/BoomStore';
 const App: React.FC = () => {
   return (
     <section>
-      <BoomContainer level={ELevel.EASY} />
+      <BoomContainer level={ELevel.HARD} />
     </section>
   );
 };

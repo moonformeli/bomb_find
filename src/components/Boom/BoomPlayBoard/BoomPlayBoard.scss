@@ -29,3 +29,48 @@
     background-position: 0 -2.3rem;
   }
 }
+
+.zero {
+  @include cell;
+  background-position: -14.4rem -2.3rem;
+}
+
+.one {
+  @include cell;
+  background-position: -1.6rem -2.3rem;
+}
+
+.two {
+  @include cell;
+  background-position: -3.2rem -2.3rem;
+}
+
+.three {
+  @include cell;
+  background-position: -4.8rem -2.3rem;
+}
+
+.four {
+  @include cell;
+  background-position: -6.4rem -2.3rem;
+}
+
+.five {
+  @include cell;
+  background-position: -8rem -2.3rem;
+}
+
+.six {
+  @include cell;
+  background-position: -9.6rem -2.3rem;
+}
+
+.seven {
+  @include cell;
+  background-position: -11.2rem -2.3rem;
+}
+
+.eight {
+  @include cell;
+  background-position: -12.8rem -2.3rem;
+}
