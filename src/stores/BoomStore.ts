@@ -1,32 +1,12 @@
 import { action, observable, toJS } from 'mobx';
 import { createContext } from 'react';
 
-/**
- * 난이도 조절용
- */
-export enum ELevel {
-  EASY = 'EASY',
-  NORMAL = 'NORMAL',
-  HARD = 'HARD'
-}
-
-export enum ELevelRows {
-  EASY = 8,
-  NORMAL = 16,
-  HARD = 16
-}
-
-export enum ELevelColumns {
-  EASY = 8,
-  NORMAL = 16,
-  HARD = 30
-}
-
-export enum ELevelBoom {
-  EASY = 3,
-  NORMAL = 40,
-  HARD = 99
-}
+import {
+  ELevel,
+  ELevelBoom,
+  ELevelColumns,
+  ELevelRows
+} from '../components/Common/EN_LEVEL';
 
 export enum EDisplayType {
   WALL = -Infinity,
@@ -55,13 +35,13 @@ export default class BoomStore {
   visited: number[][] = []; /* 방문 여부 기록 배열, 탐색용으로만 사용됨 */
   timer: NodeJS.Timeout | number = 0;
 
-  constructor(private level: ELevel) {
+  constructor(private level: ELevel, private user: string = 'unknown') {
     /**
      * 난이도에 따라 게임판의 크기와 지뢰 개수를 조절한다
      * 밸런스 조정은 필요해보임
      */
     this.rows = ELevelRows[this.level];
-    this.columns = ELevelRows[this.level];
+    this.columns = ELevelColumns[this.level];
     this.booms = ELevelBoom[this.level];
 
     this.initBoard();
@@ -170,6 +150,10 @@ export default class BoomStore {
     return this.fail;
   }
 
+  get User(): string {
+    return this.user;
+  }
+
   set DeadRow(row: number) {
     this.deadRow = row;
   }
@@ -222,6 +206,24 @@ export default class BoomStore {
     this.onGameOver(true);
     this.fail = false;
     this.booms = 0;
+
+    this.saveRecord();
+  }
+
+  /**
+   * 게임을 클리어했을 시 유저 아이디와 시간을 localStorage에 기록한다
+   */
+  @action.bound
+  saveRecord() {
+    let records: (number | string)[][] = [];
+    try {
+      records = JSON.parse(localStorage.getItem('records') as string) || [];
+    } catch {
+      records = [];
+    }
+
+    records = [...records, [this.user, this.time]];
+    localStorage.setItem('records', JSON.stringify(records));
   }
 
   @action.bound

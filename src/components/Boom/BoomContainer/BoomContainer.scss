@@ -1,5 +1,16 @@
 @import '../../Common/index';
 
+.anchor {
+  color: black;
+  text-decoration: none;
+  &:active,
+  &:focus,
+  &:visited,
+  &:hover {
+    color: black;
+  }
+}
+
 .border {
   display: inline-block;
 }

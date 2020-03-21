@@ -1,19 +1,31 @@
 import { observer } from 'mobx-react-lite';
-import React, { useRef } from 'react';
+import qs from 'qs';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { style } from 'typestyle';
 
-import BoomStore, { BoomStoreContext, ELevel } from '../../../stores/BoomStore';
+import BoomStore, { BoomStoreContext } from '../../../stores/BoomStore';
+import { ELevel } from '../../Common/EN_LEVEL';
 import BoomBorder from '../BoomBorder/BoomBorder';
 import BoomPlayBoard from '../BoomPlayBoard/BoomPlayBoard';
+import BoomRecord from '../BoomRecord/BoomRecord';
 import BoomScoreBoard from '../BoomScoreBoard/BoomScoreBoard';
 import styles from './BoomContainer.scss';
 
-interface IBoomContainerProps {
-  level: ELevel;
-}
+const BoomContainer: React.FC = () => {
+  const [store, setStore] = useState<BoomStore>(null!);
 
-const BoomContainer: React.FC<IBoomContainerProps> = ({ level }) => {
-  const store = useRef(new BoomStore(level)).current;
+  useEffect(() => {
+    const parsedSearch = qs.parse(location.search, { ignoreQueryPrefix: true });
+    const user = parsedSearch?.user || 'unknown';
+    const level = parsedSearch?.level || ELevel.EASY;
+
+    setStore(new BoomStore(level, user));
+  }, []);
+
+  if (!store) {
+    return null;
+  }
 
   const borderLength = store.Columns + 2;
   const containerWidth = style({
@@ -22,6 +34,12 @@ const BoomContainer: React.FC<IBoomContainerProps> = ({ level }) => {
 
   return (
     <BoomStoreContext.Provider value={store}>
+      <Link to="/" className={styles.anchor}>
+        {'< Back'}
+      </Link>
+      {store.IsGameOver && !store.IsFail && (
+        <h3>YOUR CLEAR TIME IS {store.Time}s</h3>
+      )}
       <section className={containerWidth}>
         <article>
           <BoomBorder length={borderLength} position={'top'} />
@@ -37,6 +55,7 @@ const BoomContainer: React.FC<IBoomContainerProps> = ({ level }) => {
           <BoomBorder length={borderLength} position={'bottom'} />
         </article>
       </section>
+      <BoomRecord />
     </BoomStoreContext.Provider>
   );
 };
