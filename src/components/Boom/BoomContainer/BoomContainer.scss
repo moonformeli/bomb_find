@@ -1,0 +1,22 @@
+@import '../../Common/index';
+
+.border {
+  display: inline-block;
+}
+
+.poll {
+  @include boom;
+  width: 1rem;
+  height: 3.2rem;
+  display: inline-block;
+}
+
+.leftpoll {
+  @extend .poll;
+  background-position: -13.4rem -3.9rem;
+}
+
+.rightpoll {
+  @extend .poll;
+  background-position: -13.4rem -3.9rem;
+}

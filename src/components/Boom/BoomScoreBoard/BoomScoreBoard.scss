@@ -1,0 +1,92 @@
+@import '../../Common/index';
+
+.container {
+  flex-grow: 1;
+  height: 3.2rem;
+  background: silver;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.left {
+  margin-left: 0.6rem;
+}
+
+.right {
+  margin-right: 0.6rem;
+}
+
+.count {
+  i {
+    display: inline-block;
+    width: 1.3rem;
+    height: 2.3rem;
+  }
+}
+
+.gameStart {
+  @include boom;
+  background-position: 0 -5.5rem;
+  display: inline-block;
+  width: 2.6rem;
+  height: 2.6rem;
+
+  &:active {
+    background-position: -2.6rem -5.5rem;
+  }
+}
+
+.background {
+  @include boom;
+}
+
+.zero {
+  @extend .background;
+  background-position: 0 0;
+}
+
+.one {
+  @extend .background;
+  background-position: -1.4rem 0;
+}
+
+.two {
+  @extend .background;
+  background-position: -2.6rem 0;
+}
+
+.three {
+  @extend .background;
+  background-position: -3.9rem 0;
+}
+
+.four {
+  @extend .background;
+  background-position: -5.2rem 0;
+}
+
+.five {
+  @extend .background;
+  background-position: -6.5rem 0;
+}
+
+.six {
+  @extend .background;
+  background-position: -7.8rem 0;
+}
+
+.seven {
+  @extend .background;
+  background-position: -9.2rem 0;
+}
+
+.eight {
+  @extend .background;
+  background-position: -10.4rem 0;
+}
+
+.nine {
+  @extend .background;
+  background-position: -11.7rem 0;
+}

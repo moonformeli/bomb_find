@@ -1,0 +1,55 @@
+@import '../../Common/index';
+
+.container {
+  height: 1rem;
+}
+
+.bottomContainer {
+  position: relative;
+  top: -0.3rem;
+}
+
+.edge {
+  @include boom;
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+}
+
+.leftTopEdge {
+  @extend .edge;
+  background-position: 0 -8.1rem;
+}
+
+.rightTopEdge {
+  @extend .edge;
+  background-position: -1rem -8.1rem;
+}
+
+.leftMidEdge {
+  @extend .edge;
+  background-position: -5.6rem -8.1rem;
+}
+
+.rightMidEdge {
+  @extend .edge;
+  background-position: -6.6rem -8.1rem;
+}
+
+.leftBottomEdge {
+  @extend .edge;
+  background-position: -2rem -8.1rem;
+}
+
+.rightBottomEdge {
+  @extend .edge;
+  background-position: -3rem -8.1rem;
+}
+
+.scoreBoardBorder {
+  @include boom;
+  display: inline-block;
+  width: 1.6rem;
+  height: 1rem;
+  background-position: -4rem -8.1rem;
+}

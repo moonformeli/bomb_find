@@ -1,0 +1,31 @@
+@import '../../Common/index';
+
+.container {
+  display: inline-block;
+}
+
+.cellContainer {
+  height: 1.6rem;
+}
+
+.poll {
+  @include boom;
+  display: inline-block;
+  background-position: -13.4rem -3.9rem;
+  width: 1rem;
+  height: 100%;
+}
+
+.row {
+  display: inline-block;
+  height: 100%;
+}
+
+.cell {
+  @include cell;
+  background-position: 0 -3.9rem;
+
+  &:active {
+    background-position: 0 -2.3rem;
+  }
+}
