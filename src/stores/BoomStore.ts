@@ -45,7 +45,7 @@ export default class BoomStore {
     if (level === ELevel.EASY) {
       this.rows = 8;
       this.columns = 8;
-      this.booms = 40;
+      this.booms = 3;
     } else if (level === ELevel.NORMAL) {
       this.rows = 16;
       this.columns = 16;
@@ -283,6 +283,8 @@ export default class BoomStore {
     this.time = 0;
     this.isGameOver = false;
     this.isMapChanged = false;
+    this.deadRow = 0;
+    this.deadColumn = 0;
     this.fail = false;
     this.initBoard();
     this.onGameStart();
@@ -295,10 +297,7 @@ export default class BoomStore {
    */
   @action.bound
   onPutFlag(row: number, column: number) {
-    if (
-      this.booms - 1 < 0 ||
-      this.displayMap[row][column] === EDisplayType.EMPTY
-    ) {
+    if (this.displayMap[row][column] === EDisplayType.EMPTY) {
       return;
     }
 
@@ -306,8 +305,10 @@ export default class BoomStore {
       this.displayMap[row][column] = EDisplayType.UNKNOWN;
       this.booms += 1;
     } else {
-      this.displayMap[row][column] = EDisplayType.FLAG;
-      this.booms -= 1;
+      if (this.booms - 1 >= 0) {
+        this.displayMap[row][column] = EDisplayType.FLAG;
+        this.booms -= 1;
+      }
     }
 
     this.isMapChanged = true;
