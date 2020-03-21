@@ -5,9 +5,15 @@ import { createContext } from 'react';
  * 난이도 조절용
  */
 export enum ELevel {
-  EASY = 'easy',
-  NORMAL = 'normal',
-  HARD = 'hard'
+  EASY = 'EASY',
+  NORMAL = 'NORMAL',
+  HARD = 'HARD'
+}
+
+export enum ELevelBoom {
+  EASY = 3,
+  NORMAL = 40,
+  HARD = 99
 }
 
 export enum EDisplayType {
@@ -37,7 +43,7 @@ export default class BoomStore {
   visited: number[][] = []; /* 방문 여부 기록 배열, 탐색용으로만 사용됨 */
   timer: NodeJS.Timeout | number = 0;
 
-  constructor(level: ELevel) {
+  constructor(private level: ELevel) {
     /**
      * 난이도에 따라 게임판의 크기와 지뢰 개수를 조절한다
      * 밸런스 조정은 필요해보임
@@ -45,16 +51,14 @@ export default class BoomStore {
     if (level === ELevel.EASY) {
       this.rows = 8;
       this.columns = 8;
-      this.booms = 3;
     } else if (level === ELevel.NORMAL) {
       this.rows = 16;
       this.columns = 16;
-      this.booms = 40;
     } else {
       this.rows = 16;
       this.columns = 30;
-      this.booms = 99;
     }
+    this.booms = ELevelBoom[this.level];
 
     this.initBoard();
   }
@@ -286,6 +290,7 @@ export default class BoomStore {
     this.deadRow = 0;
     this.deadColumn = 0;
     this.fail = false;
+    this.booms = ELevelBoom[this.level];
     this.initBoard();
     this.onGameStart();
   }
