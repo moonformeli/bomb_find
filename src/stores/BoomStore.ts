@@ -1,6 +1,9 @@
 import { action, computed, observable, toJS } from 'mobx';
 import { createContext } from 'react';
 
+/**
+ * 난이도 조절용
+ */
 export enum ELevel {
   EASY = 'easy',
   NORMAL = 'normal',
@@ -21,7 +24,8 @@ export default class BoomStore {
   @observable booms: number = 0;
   @observable time: number = 0;
   @observable board: number[][] = []; /* 지뢰 기록 배열 */
-  @observable visited: number[][] = []; /* 방문 여부 기록 배열 */
+  @observable
+  visited: number[][] = []; /* 방문 여부 기록 배열, 탐색용으로만 사용됨 */
   @observable displayMap: number[][] = []; /* 보여주기 여부 결정 배열 */
   @observable isStarted: boolean = false;
   @observable isGameOver: boolean = false;
@@ -29,18 +33,22 @@ export default class BoomStore {
   timer: NodeJS.Timeout | number = 0;
 
   constructor(level: ELevel) {
+    /**
+     * 난이도에 따라 게임판의 크기와 지뢰 개수를 조절한다
+     * 밸런스 조정은 필요해보임
+     */
     if (level === ELevel.EASY) {
       this.rows = 8;
       this.columns = 8;
-      this.booms = 25;
+      this.booms = 10;
     } else if (level === ELevel.NORMAL) {
       this.rows = 12;
       this.columns = 12;
-      this.booms = 60;
+      this.booms = 30;
     } else {
       this.rows = 20;
       this.columns = 20;
-      this.booms = 90;
+      this.booms = 60;
     }
 
     this.initBoard();
@@ -52,7 +60,7 @@ export default class BoomStore {
     this.visited = [];
     this.displayMap = [];
 
-    /* row, column 보다 한 겹 더 둘러서 만든다 */
+    /* row, column 보다 한 겹 더 둘러서 만든다, 탐색 시 오버플로우 에러 방지용 */
     for (let i = 0; i < this.rows + 2; i += 1) {
       this.board[i] = [];
       this.visited[i] = [];
@@ -145,13 +153,15 @@ export default class BoomStore {
     return this.isGameOver;
   }
 
+  /**
+   * 화면에 cell 의 내용을 보여줘도 되는지 판단하는 메소드
+   * 1. 지뢰를 눌렀거나
+   * 2. 빈 칸을 눌렀거나
+   * 3. 숫자 칸을 눌렀으면 true 반환
+   * 4. 그 외 false 반환
+   */
+  @action.bound
   shouldShowCell(row: number, column: number): boolean {
-    // return (
-    //   this.displayMap[row][column] > EDisplayType.EMPTY ||
-    //   // this.displayMap[row][column] === EDisplayType.FLAG ||
-    //   this.displayMap[row][column] === EDisplayType.BOOM
-    // );
-
     return (
       this.displayMap[row][column] >= EDisplayType.EMPTY ||
       this.displayMap[row][column] === EDisplayType.BOOM
@@ -190,6 +200,9 @@ export default class BoomStore {
     this.timer = 0;
   }
 
+  /**
+   * 게임을 재시작하기위해 관련된 모든 것들을 초기화한다
+   */
   @action.bound
   onGameRestart(): void {
     clearTimeout(this.timer as number);
@@ -200,6 +213,11 @@ export default class BoomStore {
     this.onGameStart();
   }
 
+  /**
+   * 마우스 우클릭이 발생한 cell 에 깃발을 꼽거나 회수하는 메소드
+   * 깃발을 꼽으면 지뢰 개수를 1개 줄이고,
+   * 깃발을 회수하면 지뢰 개수를 1개 늘린다
+   */
   @action.bound
   onPutFlag(row: number, column: number) {
     if (
@@ -243,10 +261,7 @@ export default class BoomStore {
   }
 
   /**
-   * 1. 방문한 적이 없고
-   * 2. 벽이나 지뢰가 있는 지점이 아니고
-   * 3. 기준점 주변에 지뢰가 없는 경우에만
-   * 탐색 가능하다고 판단
+   * 인접한 8칸 모두 지뢰가 없어야만 탐색 가능하다고 판단
    */
   @action.bound
   isSearchable(r: number, c: number): boolean {
@@ -265,7 +280,7 @@ export default class BoomStore {
   /**
    * 인접한 8 칸을 조사하면서 지뢰가 있음을 알려주는 숫자 (1~9)가 들어있는 셀을
    * 이어서 테두리가 둘러지는 영역을 구한다.
-   * 이전에 방문했던 지점이거나 벽이라면 살피지 않음
+   * 이전에 방문했던 지점, 벽, 깃발, 지뢰가 있다면 살피지 않음
    */
   @action.bound
   findSafeArea(row: number, column: number) {
@@ -279,12 +294,7 @@ export default class BoomStore {
         continue;
       }
 
-      // if (this.board[r][c] === EDisplayType.EMPTY) {
-      //   this.displayMap[r][c] = EDisplayType.SAFE;
-      // } else {
       this.displayMap[r][c] = this.board[r][c];
-      // }
-
       this.visited[r][c] = 1;
 
       if (this.isSearchable(r, c)) {

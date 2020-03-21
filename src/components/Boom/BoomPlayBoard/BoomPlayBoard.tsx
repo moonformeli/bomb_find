@@ -42,28 +42,39 @@ const showCellClassName = (value: number) => {
 const BoomPlayBoard: React.FC = () => {
   const store = useContext(BoomStoreContext);
 
-  const onCellClick = (e: React.MouseEvent) => {
-    const { button } = e;
-    const { row, column } = e.target['dataset'];
-
-    if (button === EMouseButton.RIGHT_CLICK) {
-      store.onPutFlag(row, column);
-      return;
+  const onLeftClick = (row: number, column: number): void => {
+    if (store.isSafe(row, column)) {
+      store.findSafeArea(row, column);
+    } else {
+      store.onGameOver();
     }
+  };
 
+  const onRightClick = (row: number, column: number): void => {
+    store.onPutFlag(row, column);
+  };
+
+  const onCellClick = (e: React.MouseEvent) => {
     if (store.IsGameOver) {
       return;
     }
-
     if (!store.IsStarted) {
       store.onGameStart();
     }
 
-    if (store.isBoom(+row, +column)) {
-      store.onGameOver();
-      return;
+    const { button } = e;
+    const { row, column } = e.target['dataset'];
+
+    if (button === EMouseButton.RIGHT_CLICK) {
+      onRightClick(+row, +column);
+    } else if (button === EMouseButton.LEFT_CLICK) {
+      onLeftClick(+row, +column);
     }
-    store.findSafeArea(+row, +column);
+
+    /**
+     * 클릭의 종류에 상관없이 클릭이 발생하면
+     * 게임 종료의 여부를 판단한다
+     */
   };
 
   const cells = new Array(store.Rows).fill(0).map((_, i) => {
