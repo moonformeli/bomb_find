@@ -202,7 +202,10 @@ export default class BoomStore {
 
   @action.bound
   onPutFlag(row: number, column: number) {
-    if (this.booms - 1 < 0) {
+    if (
+      this.booms - 1 < 0 ||
+      this.displayMap[row][column] === EDisplayType.EMPTY
+    ) {
       return;
     }
 
