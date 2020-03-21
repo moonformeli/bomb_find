@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import React, { useContext, useEffect, useState } from 'react';
-import { classes, style } from 'typestyle';
+import { classes } from 'typestyle';
 
 import { BoomStoreContext, EDisplayType } from '../../../stores/BoomStore';
 import styles from './BoomPlayBoard.scss';

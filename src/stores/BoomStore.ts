@@ -1,4 +1,4 @@
-import { action, observable, toJS } from 'mobx';
+import { action, observable } from 'mobx';
 import { createContext } from 'react';
 
 import {
@@ -392,9 +392,6 @@ export default class BoomStore {
         queue.push([r + 1, c + 1]);
       }
     }
-
-    console.log(toJS(this.displayMap));
-    // console.log(this.shouldShowCell(row, column));
   }
 }
 
