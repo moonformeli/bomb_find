@@ -10,8 +10,20 @@ export enum ELevel {
   HARD = 'HARD'
 }
 
+export enum ELevelRows {
+  EASY = 8,
+  NORMAL = 16,
+  HARD = 16
+}
+
+export enum ELevelColumns {
+  EASY = 8,
+  NORMAL = 16,
+  HARD = 30
+}
+
 export enum ELevelBoom {
-  EASY = 3,
+  EASY = 35,
   NORMAL = 40,
   HARD = 99
 }
@@ -48,16 +60,8 @@ export default class BoomStore {
      * 난이도에 따라 게임판의 크기와 지뢰 개수를 조절한다
      * 밸런스 조정은 필요해보임
      */
-    if (level === ELevel.EASY) {
-      this.rows = 8;
-      this.columns = 8;
-    } else if (level === ELevel.NORMAL) {
-      this.rows = 16;
-      this.columns = 16;
-    } else {
-      this.rows = 16;
-      this.columns = 30;
-    }
+    this.rows = ELevelRows[this.level];
+    this.columns = ELevelRows[this.level];
     this.booms = ELevelBoom[this.level];
 
     this.initBoard();
@@ -275,6 +279,7 @@ export default class BoomStore {
 
     clearTimeout(this.timer as number);
     this.timer = 0;
+    this.isMapChanged = true;
   }
 
   /**
