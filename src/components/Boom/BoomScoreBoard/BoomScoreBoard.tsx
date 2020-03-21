@@ -53,7 +53,9 @@ const BoomScoreBoard: React.FC = () => {
     );
   };
 
-  const onGameStart = () => {};
+  const onGameStart = () => {
+    store.onGameRestart();
+  };
 
   return (
     <div className={styles.container}>

@@ -7,8 +7,13 @@ export enum ELevel {
   HARD = 'hard'
 }
 
-export const BOOM = -1;
-const WALL = -Infinity;
+export enum EDisplayType {
+  WALL = -Infinity,
+  UNKNOWN = -2,
+  BOOM = -1,
+  EMPTY = 0,
+  FLAG = Infinity
+}
 
 export default class BoomStore {
   @observable rows: number = 0;
@@ -43,24 +48,28 @@ export default class BoomStore {
 
   @action.bound
   private initBoard(): void {
+    this.board = [];
+    this.visited = [];
+    this.displayMap = [];
+
     /* row, column 보다 한 겹 더 둘러서 만든다 */
     for (let i = 0; i < this.rows + 2; i += 1) {
       this.board[i] = [];
       this.visited[i] = [];
       this.displayMap[i] = [];
       for (let j = 0; j < this.columns + 2; j += 1) {
-        this.board[i].push(WALL);
-        this.visited[i].push(WALL);
-        this.displayMap[i].push(WALL);
+        this.board[i].push(EDisplayType.WALL);
+        this.visited[i].push(EDisplayType.WALL);
+        this.displayMap[i].push(EDisplayType.WALL);
       }
     }
 
     /* 지뢰찾기 cells 생성 */
     for (let i = 1; i <= this.rows; i += 1) {
       for (let j = 1; j <= this.columns; j += 1) {
-        this.board[i][j] = 0;
-        this.visited[i][j] = 0;
-        this.displayMap[i][j] = 0;
+        this.board[i][j] = EDisplayType.EMPTY;
+        this.visited[i][j] = EDisplayType.EMPTY;
+        this.displayMap[i][j] = EDisplayType.UNKNOWN;
       }
     }
 
@@ -70,8 +79,8 @@ export default class BoomStore {
       const randomRow = Math.floor(Math.random() * this.rows);
       const randomCol = Math.floor(Math.random() * this.columns);
 
-      if (this.board[randomRow][randomCol] === 0) {
-        this.board[randomRow][randomCol] = BOOM;
+      if (this.board[randomRow][randomCol] === EDisplayType.EMPTY) {
+        this.board[randomRow][randomCol] = EDisplayType.BOOM;
         bombs -= 1;
       }
     }
@@ -79,22 +88,37 @@ export default class BoomStore {
     /* 인접한 칸에 지뢰가 몇 개 있는지 조사 */
     for (let i = 1; i <= this.rows; i += 1) {
       for (let j = 1; j <= this.columns; j += 1) {
-        if (this.board[i][j] < 0) {
+        if (this.board[i][j] < EDisplayType.EMPTY) {
           continue;
         }
 
         /* 인접한 8칸을 조사 */
-        if (this.board[i - 1][j - 1] === BOOM) this.board[i][j] += 1;
-        if (this.board[i][j - 1] === BOOM) this.board[i][j] += 1;
-        if (this.board[i + 1][j - 1] === BOOM) this.board[i][j] += 1;
-        if (this.board[i - 1][j] === BOOM) this.board[i][j] += 1;
-        if (this.board[i + 1][j] === BOOM) this.board[i][j] += 1;
-        if (this.board[i - 1][j + 1] === BOOM) this.board[i][j] += 1;
-        if (this.board[i][j + 1] === BOOM) this.board[i][j] += 1;
-        if (this.board[i + 1][j + 1] === BOOM) this.board[i][j] += 1;
+        if (this.board[i - 1][j - 1] === EDisplayType.BOOM) {
+          this.board[i][j] += 1;
+        }
+        if (this.board[i][j - 1] === EDisplayType.BOOM) {
+          this.board[i][j] += 1;
+        }
+        if (this.board[i + 1][j - 1] === EDisplayType.BOOM) {
+          this.board[i][j] += 1;
+        }
+        if (this.board[i - 1][j] === EDisplayType.BOOM) {
+          this.board[i][j] += 1;
+        }
+        if (this.board[i + 1][j] === EDisplayType.BOOM) {
+          this.board[i][j] += 1;
+        }
+        if (this.board[i - 1][j + 1] === EDisplayType.BOOM) {
+          this.board[i][j] += 1;
+        }
+        if (this.board[i][j + 1] === EDisplayType.BOOM) {
+          this.board[i][j] += 1;
+        }
+        if (this.board[i + 1][j + 1] === EDisplayType.BOOM) {
+          this.board[i][j] += 1;
+        }
       }
     }
-    console.log(toJS(this.board));
   }
 
   get Columns(): number {
@@ -122,8 +146,15 @@ export default class BoomStore {
   }
 
   shouldShowCell(row: number, column: number): boolean {
+    // return (
+    //   this.displayMap[row][column] > EDisplayType.EMPTY ||
+    //   // this.displayMap[row][column] === EDisplayType.FLAG ||
+    //   this.displayMap[row][column] === EDisplayType.BOOM
+    // );
+
     return (
-      this.displayMap[row][column] > 0 || this.displayMap[row][column] === BOOM
+      this.displayMap[row][column] >= EDisplayType.EMPTY ||
+      this.displayMap[row][column] === EDisplayType.BOOM
     );
   }
 
@@ -149,8 +180,8 @@ export default class BoomStore {
     this.isGameOver = true;
     for (let i = 1; i <= this.rows; i += 1) {
       for (let j = 1; j <= this.columns; j += 1) {
-        if (this.board[i][j] === BOOM) {
-          this.displayMap[i][j] = 1;
+        if (this.board[i][j] === EDisplayType.BOOM) {
+          this.displayMap[i][j] = EDisplayType.BOOM;
         }
       }
     }
@@ -159,12 +190,37 @@ export default class BoomStore {
     this.timer = 0;
   }
 
+  @action.bound
+  onGameRestart(): void {
+    clearTimeout(this.timer as number);
+    this.timer = 0;
+    this.time = 0;
+    this.isGameOver = false;
+    this.initBoard();
+    this.onGameStart();
+  }
+
+  @action.bound
+  onPutFlag(row: number, column: number) {
+    if (this.booms - 1 < 0) {
+      return;
+    }
+
+    if (this.displayMap[row][column] === EDisplayType.FLAG) {
+      this.displayMap[row][column] = EDisplayType.UNKNOWN;
+      this.booms += 1;
+    } else {
+      this.displayMap[row][column] = EDisplayType.FLAG;
+      this.booms -= 1;
+    }
+  }
+
   /**
    * 지뢰가 있는 곳인지 판단하는 메소드
    */
   @action.bound
   isBoom(row: number, column: number): boolean {
-    return this.board[row][column] === BOOM;
+    return this.board[row][column] === EDisplayType.BOOM;
   }
 
   /**
@@ -172,7 +228,7 @@ export default class BoomStore {
    */
   @action.bound
   isWall(row: number, column: number): boolean {
-    return this.board[row][column] === WALL;
+    return this.board[row][column] === EDisplayType.WALL;
   }
 
   /**
@@ -192,14 +248,14 @@ export default class BoomStore {
   @action.bound
   isSearchable(r: number, c: number): boolean {
     return (
-      this.board[r - 1][c - 1] !== BOOM &&
-      this.board[r - 1][c] !== BOOM &&
-      this.board[r - 1][c + 1] !== BOOM &&
-      this.board[r][c - 1] !== BOOM &&
-      this.board[r][c + 1] !== BOOM &&
-      this.board[r + 1][c - 1] !== BOOM &&
-      this.board[r + 1][c] !== BOOM &&
-      this.board[r + 1][c + 1] !== BOOM
+      this.board[r - 1][c - 1] !== EDisplayType.BOOM &&
+      this.board[r - 1][c] !== EDisplayType.BOOM &&
+      this.board[r - 1][c + 1] !== EDisplayType.BOOM &&
+      this.board[r][c - 1] !== EDisplayType.BOOM &&
+      this.board[r][c + 1] !== EDisplayType.BOOM &&
+      this.board[r + 1][c - 1] !== EDisplayType.BOOM &&
+      this.board[r + 1][c] !== EDisplayType.BOOM &&
+      this.board[r + 1][c + 1] !== EDisplayType.BOOM
     );
   }
 
@@ -216,11 +272,15 @@ export default class BoomStore {
     while (queue.length > 0) {
       const [r, c] = queue.shift() as number[];
 
-      this.displayMap[r][c] = 1;
-
-      if (this.visited[r][c] || this.board[r][c] !== 0) {
+      if (this.visited[r][c] || this.displayMap[r][c] === EDisplayType.FLAG) {
         continue;
       }
+
+      // if (this.board[r][c] === EDisplayType.EMPTY) {
+      //   this.displayMap[r][c] = EDisplayType.SAFE;
+      // } else {
+      this.displayMap[r][c] = this.board[r][c];
+      // }
 
       this.visited[r][c] = 1;
 

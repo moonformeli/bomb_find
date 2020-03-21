@@ -2,12 +2,17 @@ import { observer } from 'mobx-react-lite';
 import React, { useContext } from 'react';
 import { classes } from 'typestyle';
 
-import { BOOM, BoomStoreContext } from '../../../stores/BoomStore';
+import { BoomStoreContext, EDisplayType } from '../../../stores/BoomStore';
 import styles from './BoomPlayBoard.scss';
+
+enum EMouseButton {
+  LEFT_CLICK = 0,
+  RIGHT_CLICK = 2
+}
 
 const showCellClassName = (value: number) => {
   switch (value) {
-    case 0:
+    case EDisplayType.EMPTY:
       return styles.zero;
     case 1:
       return styles.one;
@@ -25,8 +30,10 @@ const showCellClassName = (value: number) => {
       return styles.seven;
     case 8:
       return styles.eight;
-    case BOOM:
+    case EDisplayType.BOOM:
       return styles.boom;
+    case EDisplayType.FLAG:
+      return styles.flag;
     default:
       return '';
   }
@@ -36,6 +43,14 @@ const BoomPlayBoard: React.FC = () => {
   const store = useContext(BoomStoreContext);
 
   const onCellClick = (e: React.MouseEvent) => {
+    const { button } = e;
+    const { row, column } = e.target['dataset'];
+
+    if (button === EMouseButton.RIGHT_CLICK) {
+      store.onPutFlag(row, column);
+      return;
+    }
+
     if (store.IsGameOver) {
       return;
     }
@@ -44,7 +59,6 @@ const BoomPlayBoard: React.FC = () => {
       store.onGameStart();
     }
 
-    const { row, column } = e.target['dataset'];
     if (store.isBoom(+row, +column)) {
       store.onGameOver();
       return;
@@ -54,7 +68,12 @@ const BoomPlayBoard: React.FC = () => {
 
   const cells = new Array(store.Rows).fill(0).map((_, i) => {
     return (
-      <div key={i} className={styles.cellContainer} onClick={onCellClick}>
+      <div
+        key={i}
+        className={styles.cellContainer}
+        onMouseDown={onCellClick}
+        onContextMenu={e => e.preventDefault()}
+      >
         <div className={styles.poll} />
         <div className={styles.row}>
           {new Array(store.Columns).fill(0).map((_, j) => {
@@ -67,7 +86,7 @@ const BoomPlayBoard: React.FC = () => {
                 className={classes(
                   styles.cell,
                   store.shouldShowCell(row, column) &&
-                    showCellClassName(store.board[row][column])
+                    showCellClassName(store.displayMap[row][column])
                 )}
                 data-row={row}
                 data-column={column}
